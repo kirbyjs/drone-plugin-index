@@ -43,7 +43,7 @@ steps:
       event: push
 
 - name: flush
-  image: plugins/s3-cache:1
+  image: plugins/s3-cache
   settings:
     pull: true
     endpoint: http://minio.company.com
@@ -72,6 +72,23 @@ steps:
     restore: true
 ```
 
+Example configuration using file credentials:
+
+```yaml
+kind: pipeline
+name: default
+
+steps:
+- name: restore
+  image: plugins/s3-cache
+  settings:
+    pull: true
+    root: my-bucket
+    file_credentials: /root/.aws/credentials
+    region: us-east-1
+    restore: true
+```
+
 # Parameter Reference
 
 endpoint
@@ -82,6 +99,12 @@ access_key
 
 secret_key
 : amazon secret key (optional)
+
+file_credentials
+: absolute path to amazon credentials file (optional)
+
+profile
+: amazon profile used to resolve credentials from the credentials file, default to `default` (optional)
 
 restore
 : mode to restore the build environment from cache
@@ -105,7 +128,7 @@ filename
 : filename for the cache (optional)
 
 root
-: root path prefix for all cache default paths (`path`, `fallback_path`, and `flush_path`), defaults to `/` (optional)
+: bucket name with root path prefix for all cache default paths (`path`, `fallback_path`, and `flush_path`), defaults to `/`. (optional)
 
 path
 : path to store the cache file, defaults to `[root]/<owner>/<repo>/<branch>/` (optional)
@@ -116,5 +139,15 @@ fallback_path
 flush_path
 : path to search for flushable cache files, defaults to `[root]/<owner>/<repo>/` (optional)
 
+region
+: bucket region (us-east-1, eu-west-1, etc), if using a s3 endpoint, it will grab the region from that endpoint (optional)
+
 workdir
 : path where to restore the cache files to (optional)
+
+
+## Bucket Name Resolution
+The following are methods for resolving the bucket name. Note that the plugin will error if you try to use more than one of these methods together.
+
+- Setting the `root` parameter to the bucket name
+- Setting the `endpoint` parameter the bucket name will be grabbed from the endpoint
